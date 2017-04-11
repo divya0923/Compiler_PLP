@@ -62,29 +62,29 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Chain chain = binaryChain.getE0();
 		chain.visit(this, arg);
 		TypeName chainType = chain.getTypeName();
-		
+
 		ChainElem chainElem = binaryChain.getE1();
 		chainElem.visit(this, arg);
 		TypeName chainElemType = chainElem.getTypeName();
-		
+
 		Token arrow = binaryChain.getArrow();
-		
+
 		if(chainType.isType(TypeName.URL)  && arrow.kind.equals(Kind.ARROW) && chainElemType.isType(TypeName.IMAGE))
 			binaryChain.setTypeName(TypeName.IMAGE);
-		
+
 		else if(chainType.isType(TypeName.FILE)  && arrow.kind.equals(Kind.ARROW) && chainElemType.isType(TypeName.IMAGE))
 			binaryChain.setTypeName(TypeName.IMAGE);
-		
+
 		else if(chainType.isType(TypeName.FRAME)  && arrow.kind.equals(Kind.ARROW) && chainElem instanceof FrameOpChain){
 			if(chainElem.getFirstToken().kind.equals(KW_XLOC) || chainElem.getFirstToken().kind.equals(KW_YLOC)) {
 				binaryChain.setTypeName(TypeName.INTEGER);
 			}
 			else if(chainElem.getFirstToken().kind.equals(KW_SHOW) || chainElem.getFirstToken().kind.equals(KW_HIDE) || chainElem.getFirstToken().kind.equals(KW_MOVE))
 				binaryChain.setTypeName(TypeName.FRAME);
-			else 
+			else
 				throw new TypeCheckException("");
 		}
-		
+
 		else if(chainType.isType(TypeName.IMAGE)  && arrow.kind.equals(Kind.ARROW) && chainElem instanceof ImageOpChain){
 			if(chainElem.getFirstToken().kind.equals(OP_WIDTH) || chainElem.getFirstToken().kind.equals(OP_HEIGHT)) {
 				binaryChain.setTypeName(TypeName.INTEGER);
@@ -92,48 +92,48 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else if(chainElem.getFirstToken().kind.equals(KW_SCALE)) {
 				binaryChain.setTypeName(TypeName.IMAGE);
 			}
-			else 
+			else
 				throw new TypeCheckException("ChainElement is not an instance of FrameOpChain");
 		}
-		
+
 		else if(chainType.isType(TypeName.IMAGE)  && arrow.kind.equals(Kind.ARROW) && chainElemType.isType(TypeName.FRAME)){
 			binaryChain.setTypeName(TypeName.FRAME);
 		}
-		
+
 		else if(chainType.isType(TypeName.IMAGE)  && arrow.kind.equals(Kind.ARROW) && chainElemType.isType(TypeName.FILE)){
 			binaryChain.setTypeName(TypeName.NONE);
 		}
-		
+
 		else if(chainType.isType(TypeName.IMAGE)  && (arrow.kind.equals(Kind.ARROW) || arrow.kind.equals(Kind.BARARROW)) && chainElem instanceof FilterOpChain){
 			if(chainElem.getFirstToken().kind.equals(OP_GRAY) || chainElem.getFirstToken().kind.equals(OP_BLUR) || chainElem.getFirstToken().kind.equals(OP_CONVOLVE)) {
 				binaryChain.setTypeName(TypeName.IMAGE);
 			}
-			else 
+			else
 				throw new TypeCheckException("ChainElement is not an instance of FrameOpChain");
 		}
-		
+
 		else if(chainType.isType(TypeName.IMAGE)  && arrow.kind.equals(Kind.ARROW) && chainElem instanceof IdentChain){
 			binaryChain.setTypeName(TypeName.IMAGE);
 		}
-		
-		else 
+
+		else
 			throw new TypeCheckException("Operator is not arrow or bararrow in Binary Chain");
-	
+
 		return null;
 	}
-	
+
 	@Override
 	public Object visitBinaryExpression(BinaryExpression binaryExpression, Object arg) throws Exception {
 		Expression e0 = binaryExpression.getE0();
 		Expression e1 = binaryExpression.getE1();
 		Token op = binaryExpression.getOp();
-		
+
 		e0.visit(this, arg);
 		TypeName e0type = e0.getTypeName();
-		
+
 		e1.visit(this, arg);
 		TypeName e1type = e1.getTypeName();
-		
+
 		if (e0type.isType(TypeName.INTEGER) && e1type.isType(TypeName.INTEGER)){
 			if(op.kind.equals(TIMES) || op.kind.equals(PLUS) || op.kind.equals(MINUS) || op.kind.equals(DIV)){
 				binaryExpression.setTypeName(TypeName.INTEGER);
@@ -144,7 +144,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else if(op.kind.equals(EQUAL) || op.kind.equals(NOTEQUAL)){
 				binaryExpression.setTypeName(TypeName.BOOLEAN);
 			}
-			else 
+			else
 				throw new TypeCheckException("Operation is not allowed between two integers");
 		}
 		else if(e0type.isType(TypeName.BOOLEAN) && e1type.isType(TypeName.BOOLEAN)){
@@ -154,7 +154,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else if(op.kind.equals(EQUAL) || op.kind.equals(NOTEQUAL)){
 				binaryExpression.setTypeName(TypeName.BOOLEAN);
 			}
-			else 
+			else if(op.kind.equals(AND) || op.kind.equals(OR)) {
+				binaryExpression.setTypeName(TypeName.BOOLEAN);
+			}
+			else
 				throw new TypeCheckException("Operation is not allowed between two booleans");
 		}
 		else if(e0type.isType(TypeName.IMAGE) && e1type.isType(TypeName.IMAGE)){
@@ -164,26 +167,26 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else if(op.kind.equals(EQUAL) || op.kind.equals(NOTEQUAL)){
 				binaryExpression.setTypeName(TypeName.BOOLEAN);
 			}
-			else 
+			else
 				throw new TypeCheckException("Operation is not allowed between two images");
 		}
 		else if((e0type.isType(TypeName.IMAGE) && e1type.isType(TypeName.INTEGER)) || (e0type.isType(TypeName.INTEGER) && e1type.isType(TypeName.IMAGE))){
 			if(op.kind.equals(TIMES))
 				binaryExpression.setTypeName(TypeName.IMAGE);
-			else 
+			else
 				throw new TypeCheckException("Operation is not allowed between two image and integer");
-		}	
+		}
 		else if (e0type.isType(e1type)){
 			if(op.kind.equals(EQUAL) || op.kind.equals(NOTEQUAL)){
 				binaryExpression.setTypeName(TypeName.BOOLEAN);
 			}
-			else 
+			else
 				throw new TypeCheckException("Operation is not allowed between two expressions of same type");
 		}
-		
-		else 
-			throw new TypeCheckException("Operation is not allowed between two expressions"); 
-					
+
+		else
+			throw new TypeCheckException("Operation is not allowed between two expressions");
+
 		return null;
 	}
 
@@ -194,14 +197,14 @@ public class TypeCheckVisitor implements ASTVisitor {
 		ArrayList<Dec> decs = block.getDecs();
 		for(Dec dec : decs)
 			dec.visit(this, arg);
-		
+
 		//visit statement
 		ArrayList<Statement> statements = block.getStatements();
 		for(Statement statement : statements)
 			statement.visit(this, arg);
-		
+
 		symtab.leaveScope();
-		
+
 		return null;
 	}
 
@@ -216,13 +219,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 		int tupleLength = filterOpChain.getArg().getExprList().size();
 		if(tupleLength != 0)
 			throw new TypeCheckException("Tuple length is not zero for FilterOpChain");
-		else 
+		else
 			filterOpChain.setTypeName(TypeName.IMAGE);
-			
+
 		filterOpChain.getArg().visit(this, arg);
-		
+
 		//visitTuple(filterOpChain.getArg(), arg);
-		
+
 		return null;
 	}
 
@@ -230,28 +233,28 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitFrameOpChain(FrameOpChain frameOpChain, Object arg) throws Exception {
 		Kind kind = frameOpChain.firstToken.kind;
 		int tupleLength = frameOpChain.getArg().getExprList().size();
-		
+
 		frameOpChain.getArg().visit(this, arg);
-		
+
 		if(kind == Kind.KW_SHOW || kind == Kind.KW_HIDE){
 			if(tupleLength != 0)
 				throw new TypeCheckException("Tuple length is not zero for FrameOpChain");
-			else 
+			else
 				frameOpChain.setTypeName(Type.TypeName.NONE);
 		}
 		else if(kind == Kind.KW_XLOC || kind == Kind.KW_YLOC){
 			if(tupleLength != 0)
 				throw new TypeCheckException("Tuple length is not zero for FrameOpChain");
-			else 
+			else
 				frameOpChain.setTypeName(Type.TypeName.INTEGER);
 		}
 		else if(kind == Kind.KW_MOVE){
 			if(tupleLength != 2)
 				throw new TypeCheckException("Tuple length is not two for FrameOpChain");
-			else 
+			else
 				frameOpChain.setTypeName(Type.TypeName.NONE);
 		}
-		
+
 		return null;
 	}
 
@@ -261,7 +264,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if(dec == null)
 			throw new TypeCheckException("Ident has not been declared and is visible in the current scope");
 		else {
-			// FIXME - validate this 
+			// FIXME - validate this
 			identChain.setTypeName(Type.getTypeName(dec.getFirstToken()));
 		}
 		return null;
@@ -319,7 +322,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		whileStatement.getB().visit(this, arg);
 		return null;
 	}
-	
+
 	@Override
 	public Object visitDec(Dec declaration, Object arg) throws Exception {
 		boolean insert = symtab.insert(declaration.getIdent().getText(), declaration);
@@ -339,7 +342,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	}
 
 	@Override
-	public Object visitAssignmentStatement(AssignmentStatement assignStatement, Object arg) throws Exception {	
+	public Object visitAssignmentStatement(AssignmentStatement assignStatement, Object arg) throws Exception {
 		IdentLValue var = assignStatement.getVar();
 		var.visit(this, arg);
 		Expression e = assignStatement.getE();
@@ -359,7 +362,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			typeName = Type.getTypeName(dec.getFirstToken());
 			dec.setTypeName(typeName);
 			identX.setDec(dec);
-		}	
+		}
 		return null;
 	}
 
@@ -382,17 +385,17 @@ public class TypeCheckVisitor implements ASTVisitor {
 		Kind kind = imageOpChain.firstToken.kind;
 		int tupleLength = imageOpChain.getArg().getExprList().size();
 		imageOpChain.getArg().visit(this, arg);
-		
+
 		if (kind == Kind.OP_WIDTH || kind == Kind.OP_HEIGHT) {
 			if(tupleLength != 0)
 				throw new TypeCheckException("Tuple length is not zero for ImageOpChain");
-			else 
+			else
 				imageOpChain.setTypeName(Type.TypeName.INTEGER);
 		}
 		else if (kind == Kind.KW_SCALE) {
 			if (tupleLength != 1)
 				throw new TypeCheckException("Tuple length is not one for ImageOpChain");
-			else 
+			else
 				imageOpChain.setTypeName(Type.TypeName.IMAGE);
 		}
 		return null;

@@ -15,8 +15,8 @@ public class IntLitExpression extends Expression {
 	public String toString() {
 		return "IntLitExpression [value=" + value + "]";
 	}
-	
-	
+
+
 
 	@Override
 	public int hashCode() {
@@ -47,6 +47,10 @@ public class IntLitExpression extends Expression {
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws Exception {
 		return v.visitIntLitExpression(this, arg);
+	}
+
+	public Integer getValue() {
+		return value;
 	}
 
 }
