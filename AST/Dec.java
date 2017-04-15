@@ -54,7 +54,7 @@ public class Dec extends ASTNode {
 
 	@Override
 	public String toString() {
-		return "Dec [ident=" + ident + ", firstToken=" + firstToken + "]";
+		return "Dec [ident=" + ident + ", typeName =" + typeName + ", firstToken=" + firstToken + " ]";
 	}
 
 	@Override

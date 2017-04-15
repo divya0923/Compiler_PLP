@@ -265,6 +265,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			throw new TypeCheckException("Ident has not been declared and is visible in the current scope");
 		else {
 			// FIXME - validate this
+			dec.setTypeName(Type.getTypeName(dec.getFirstToken()));
 			identChain.setTypeName(Type.getTypeName(dec.getFirstToken()));
 		}
 		return null;
@@ -326,6 +327,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitDec(Dec declaration, Object arg) throws Exception {
 		boolean insert = symtab.insert(declaration.getIdent().getText(), declaration);
+		declaration.setTypeName(Type.getTypeName(declaration.getFirstToken()));
 		if(!insert)
 			throw new TypeCheckException("Ident is declared twice");
 		return null;

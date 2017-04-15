@@ -78,8 +78,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	final boolean DEVEL;
 	final boolean GRADE;
 
-	public static int slotNumber = 1;
-	public static int argCount = 0;
+	public int slotNumber = 1;
+	public int argCount = 0;
 
 	@Override
 	public Object visitProgram(Program program, Object arg) throws Exception {
@@ -169,9 +169,12 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		mv.visitLocalVariable("this", classDesc, null, startRun, endRun, 0);
 
 		//TODO visit the local variables
-		for(Dec dec : program.getB().getDecs()){
-			mv.visitLocalVariable(dec.getIdent().getText(), classDesc, null, startRun, endRun, dec.getSlotNo());
-		}
+		mv.visitLocalVariable("args", "[Ljava/lang/String;", null, startRun, endRun, 0);
+
+//		for(Dec dec : program.getB().getDecs()){
+//			System.out.println("dfd " + dec.getTypeName() + dec.getIdent().getText() + dec.getSlotNo());
+//			mv.visitLocalVariable(dec.getIdent().getText(), dec.getTypeName().getJVMTypeDesc(), null, startRun, endRun, dec.getSlotNo());
+//		}
 
 		mv.visitMaxs(1, 1);
 		mv.visitEnd(); // end of run method
@@ -189,7 +192,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 	public Object visitAssignmentStatement(AssignmentStatement assignStatement, Object arg) throws Exception {
 		assignStatement.getE().visit(this, arg);
 		CodeGenUtils.genPrint(DEVEL, mv, "\nassignment: " + assignStatement.var.getText() + "=");
-		// TODO - check this getTypeName()
 		CodeGenUtils.genPrintTOS(GRADE, mv, assignStatement.getE().getTypeName());
 		assignStatement.getVar().visit(this, arg);
 		return null;
@@ -253,6 +255,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		mv.visitLabel(startLabel);
 		mv.visitInsn(ICONST_1);
 		mv.visitLabel(endLabel);
+
 		return null;
 	}
 
@@ -276,8 +279,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		Label endBlock = new Label();
 		mv.visitLabel(endBlock);
 
-		for(Dec dec: block.getDecs())
+		for(Dec dec: block.getDecs()) {
 			mv.visitLocalVariable(dec.getIdent().getText(), dec.getTypeName().getJVMTypeDesc(), null, startBlock, endBlock, dec.getSlotNo());
+		}
 
 		return null;
 	}
@@ -297,7 +301,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitDec(Dec declaration, Object arg) throws Exception {
-		declaration.setSlotNo(slotNumber++);
+		declaration.setSlotNo(slotNumber++);  // { integer x x <- 10; } x = 10;
 		return null;
 	}
 
@@ -324,9 +328,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		//TODO Implement this
 		Dec dec = identExpression.getDec();
 		if(dec instanceof ParamDec){
-			mv.visitFieldInsn(GETFIELD, className, ((ParamDec) dec).getIdent().getText(), Type.getTypeName(((ParamDec) dec).getFirstToken()).getJVMTypeDesc());
+			mv.visitVarInsn(ALOAD, 0);
+			mv.visitFieldInsn(GETFIELD, className, identExpression.getFirstToken().getText(), identExpression.getTypeName().getJVMTypeDesc());
 		}
-		else if(dec instanceof Dec) {
+		else {
 			mv.visitVarInsn(ILOAD, ((Dec) dec).getSlotNo());
 		}
 		return null;
@@ -337,9 +342,9 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		//TODO Implement this
 		Dec dec = identX.getDec();
 		if(dec instanceof ParamDec) {
-			mv.visitFieldInsn(PUTFIELD, className, ((ParamDec) dec).getIdent().getText(), Type.getTypeName(((ParamDec) dec).getFirstToken()).getJVMTypeDesc());
+			mv.visitFieldInsn(PUTFIELD, className, identX.getFirstToken().getText(), dec.getTypeName().getJVMTypeDesc());
 		}
-		else if(dec instanceof Dec) {
+		else { // dec
 			mv.visitVarInsn(ISTORE, ((Dec) dec).getSlotNo());
 		}
 		return null;
@@ -377,9 +382,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		FieldVisitor visitField = cw.visitField(ACC_PUBLIC, paramDec.getIdent().getText(), paramDec.getTypeName().getJVMTypeDesc(), null, null);
 		visitField.visitEnd();
 
+		//paramDec.setSlotNo(slotNumber++);
 		mv.visitVarInsn(ALOAD, 0);
 		mv.visitVarInsn(ALOAD, 1);
-		mv.visitLdcInsn(argCount++);
+		mv.visitLdcInsn(argCount++); // 0
 		mv.visitInsn(AALOAD);
 
 		if(paramDec.getTypeName().equals(TypeName.INTEGER)){
@@ -403,7 +409,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 
 	@Override
 	public Object visitTuple(Tuple tuple, Object arg) throws Exception {
-		assert false : "not yet implemented";
+		for(Expression e : tuple.getExprList())
+			e.visit(this, arg);
 		return null;
 	}
 
