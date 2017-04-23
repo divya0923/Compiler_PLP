@@ -26,8 +26,8 @@ public class ScannerTest {
 		Token t = scanner.nextToken();
 		assertEquals(Kind.EOF,t.kind);
 	}
-	
-	@Test 
+
+	@Test
 	public void zeroNumLitStart() throws IllegalCharException, IllegalNumberException {
 		String input = "099";
 		Scanner scanner = new Scanner(input);
@@ -35,8 +35,8 @@ public class ScannerTest {
 		assertEquals(Kind.INT_LIT, scanner.nextToken().kind);
 		assertEquals(Kind.INT_LIT, scanner.nextToken().kind);
 	}
-	
-	@Test 
+
+	@Test
 	public void testNewLine() throws IllegalCharException, IllegalNumberException {
 		String input = "\n_aa\n43f;!=|->/*\n\n\n*/\n_afvdf99\n+==\n";
 		Scanner scanner = new Scanner(input);
@@ -44,10 +44,10 @@ public class ScannerTest {
 		Token t = scanner.nextToken();
 		assertEquals(1, scanner.getLinePos(t).line);
 		Token t1 = scanner.nextToken();
-		assertEquals(0, scanner.getLinePos(t1).posInLine);	
+		assertEquals(0, scanner.getLinePos(t1).posInLine);
 	}
-	
-	@Test 
+
+	@Test
 	public void testKeyword() throws IllegalCharException, IllegalNumberException {
 		String input = "aaagray->screenheight<-";
 		Scanner scanner = new Scanner(input);
@@ -57,24 +57,24 @@ public class ScannerTest {
 		Token t1 = scanner.nextToken();
 		assertEquals(Kind.ARROW, t1.kind);
 		Token t2 = scanner.nextToken();
-		assertEquals(Kind.KW_SCREENHEIGHT, t2.kind);	
+		assertEquals(Kind.KW_SCREENHEIGHT, t2.kind);
 		Token t3 = scanner.nextToken();
 		assertEquals(Kind.ASSIGN, t3.kind);
 	}
-	
-	@Test 
+
+	@Test
 	public void testNewLineAppend() throws IllegalCharException, IllegalNumberException {
 		String input = "\n\n\n\n/a/";
 		Scanner scanner = new Scanner(input);
-		scanner.scan();	
+		scanner.scan();
 		assertEquals(4, scanner.tokens.size());
 	}
-	
-	@Test 
+
+	@Test
 	public void testString() throws IllegalCharException, IllegalNumberException {
 		String input = "/abcd wonderful + & * %$ $$__hihg /* 46546467";
 		Scanner scanner = new Scanner(input);
-		scanner.scan();	
+		scanner.scan();
 		assertEquals(Kind.IDENT, scanner.tokens.get(2).kind);
 		assertEquals(Kind.TIMES, scanner.tokens.get(5).kind);
 		assertEquals(Kind.MOD, scanner.tokens.get(6).kind);
@@ -82,50 +82,50 @@ public class ScannerTest {
 		assertEquals(Kind.IDENT, scanner.tokens.get(8).kind);
 		assertEquals(Kind.EOF, scanner.tokens.get(9).kind);
 	}
-	
-	@Test 
+
+	@Test
 	public void testOperators() throws IllegalCharException, IllegalNumberException {
 		String input = ";,(){}|&==!=<><=>=+-*/%!->|-><-";
 		Scanner scanner = new Scanner(input);
-		scanner.scan();	
+		scanner.scan();
 		for(Token t  : scanner.tokens){
 			System.out.println("Kind :" + t.kind + "pos " + t.pos);
 		}
 	}
-	
-	@Test 
+
+	@Test
 	public void testComment() throws IllegalCharException, IllegalNumberException {
 		String input = "/*jhdf$787;";
 		Scanner scanner = new Scanner(input);
-		scanner.scan();	
+		scanner.scan();
 		assertEquals(Kind.EOF, scanner.tokens.get(0).kind);
 	}
-	
-	@Test 
+
+	@Test
 	public void testStringKeyword() throws IllegalCharException, IllegalNumberException {
 		String input = "If+*}%>=whilesleep)";
 		Scanner scanner = new Scanner(input);
-		scanner.scan();	
+		scanner.scan();
 		assertEquals(Kind.IDENT, scanner.tokens.get(0).kind);
 		assertEquals(Kind.MOD, scanner.tokens.get(4).kind);
 		assertEquals(Kind.GE.text, scanner.tokens.get(5).kind.text);
 		assertEquals(Kind.IDENT, scanner.tokens.get(6).kind);
 	}
-		
-	@Test 
+
+	@Test
 	public void testStringLit() throws IllegalCharException, IllegalNumberException {
 		String input = "123)&;{!=$ab_";
 		Scanner scanner = new Scanner(input);
-		scanner.scan();	
+		scanner.scan();
 		assertEquals(Kind.INT_LIT, scanner.tokens.get(0).kind);
 		assertEquals(Kind.RPAREN, scanner.tokens.get(1).kind);
 		assertEquals(Kind.NOTEQUAL, scanner.tokens.get(5).kind);
 		assertEquals(Kind.IDENT, scanner.tokens.get(6).kind);
 	}
-	
+
 	@Test
 	public void testSemiConcat() throws IllegalCharException, IllegalNumberException {
-		String input= ";;;";		
+		String input= ";;;";
 		Scanner scanner = new Scanner(input);
 		scanner.scan();
 		Token token = scanner.nextToken();
@@ -149,13 +149,13 @@ public class ScannerTest {
 		Scanner.Token token3 = scanner.nextToken();
 		assertEquals(Scanner.Kind.EOF,token3.kind);
 	}
-	
-	
+
+
 	/**
-	 * This test illustrates how to check that the Scanner detects errors properly. 
+	 * This test illustrates how to check that the Scanner detects errors properly.
 	 * In this test, the input contains an int literal with a value that exceeds the range of an int.
 	 * The scanner should detect this and throw and IllegalNumberException.
-	 * 
+	 *
 	 * @throws IllegalCharException
 	 * @throws IllegalNumberException
 	 */
@@ -164,9 +164,9 @@ public class ScannerTest {
 		String input = "999999999999999999999";
 		Scanner scanner = new Scanner(input);
 		thrown.expect(IllegalNumberException.class);
-		scanner.scan();		
-	}	
-	
+		scanner.scan();
+	}
+
 	@Test
 	public void testFailedTC1() throws IllegalCharException, IllegalNumberException{
 		String input = "ifwhile;if;while;boolean;boolean0;integer;integer32|->frame->-image";
@@ -174,9 +174,9 @@ public class ScannerTest {
 		scanner.scan();
 		for(Token t  : scanner.tokens){
 			System.out.println("Kind :" + t.kind + "pos " + t.pos);
-		}	
+		}
 	}
-	
+
 	@Test
 	public void testFailedTC2() throws IllegalCharException, IllegalNumberException{
 		String input = "|;|--->->-|->";
@@ -184,9 +184,9 @@ public class ScannerTest {
 		scanner.scan();
 		for(Token t  : scanner.tokens){
 			System.out.println("Kind :" + t.kind + "pos " + t.pos);
-		}	
+		}
 	}
-	
+
 	@Test
 	public void testFailedTC3() throws IllegalCharException, IllegalNumberException{
 		String input = "false123 false true true123";
@@ -194,9 +194,9 @@ public class ScannerTest {
 		scanner.scan();
 		for(Token t  : scanner.tokens){
 			System.out.println("Kind :" + t.kind + "pos " + t.pos);
-		}	
+		}
 	}
-	
+
 	@Test
 	public void testBarrow() throws IllegalCharException, IllegalNumberException{
 		String input = "|->";
@@ -204,6 +204,35 @@ public class ScannerTest {
 		scanner.scan();
 		for(Token t  : scanner.tokens){
 			System.out.println("Kind :" + t.kind + "pos " + t.pos);
-		}	
+		}
 	}
+
+	@Test
+	public void testFTC1() throws IllegalCharException, IllegalNumberException{
+		String input = "/*...*/a/***/\nbc!/ /*/ /**/ !\nd/*.**/";
+		Scanner scanner = new Scanner(input);
+		scanner.scan();
+		for(Token t  : scanner.tokens){
+			System.out.println("Kind :" + t.kind + "pos " + t.pos);
+		}
+	}
+
+	@Test
+	public void testFTC2() throws IllegalCharException, IllegalNumberException{
+		String input = "***%&";
+
+		input = "false123 false true true123";
+		input = "|;|--->->-|->";
+		input = "<<<=>>>=>< ->-->";
+		input = " -< <- <+ <= <\n-<--";
+		input = "000123";
+		input = "show\r\n hide \n move \n file";
+		Scanner scanner = new Scanner(input);
+		scanner.scan();
+		for(Token t  : scanner.tokens){
+			System.out.println("Kind :" + t.kind + "pos " + t.pos +  "lineNo " +  t.getLinePos());
+		}
+	}
+
+
 }

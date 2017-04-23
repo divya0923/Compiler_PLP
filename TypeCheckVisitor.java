@@ -111,9 +111,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else
 				throw new TypeCheckException("ChainElement is not an instance of FrameOpChain");
 		}
-
-		else if(chainType.isType(TypeName.IMAGE)  && arrow.kind.equals(Kind.ARROW) && chainElem instanceof IdentChain){
+		// TODO validate this
+		else if(chainType.isType(TypeName.IMAGE)  && arrow.kind.equals(Kind.ARROW) && chainElem instanceof IdentChain && chainElemType.isType(TypeName.IMAGE)){
 			binaryChain.setTypeName(TypeName.IMAGE);
+		}
+
+		else if(chainType.isType(TypeName.INTEGER)  && arrow.kind.equals(Kind.ARROW) && chainElem instanceof IdentChain && chainElemType.isType(TypeName.INTEGER)){
+			binaryChain.setTypeName(TypeName.INTEGER);
 		}
 
 		else
@@ -135,7 +139,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		TypeName e1type = e1.getTypeName();
 
 		if (e0type.isType(TypeName.INTEGER) && e1type.isType(TypeName.INTEGER)){
-			if(op.kind.equals(TIMES) || op.kind.equals(PLUS) || op.kind.equals(MINUS) || op.kind.equals(DIV)){
+			if(op.kind.equals(TIMES) || op.kind.equals(PLUS) || op.kind.equals(MINUS) || op.kind.equals(DIV) || op.kind.equals(MOD)){
 				binaryExpression.setTypeName(TypeName.INTEGER);
 			}
 			else if (op.kind.equals(LT) || op.kind.equals(GT) || op.kind.equals(LE) || op.kind.equals(GE)){
@@ -170,11 +174,18 @@ public class TypeCheckVisitor implements ASTVisitor {
 			else
 				throw new TypeCheckException("Operation is not allowed between two images");
 		}
-		else if((e0type.isType(TypeName.IMAGE) && e1type.isType(TypeName.INTEGER)) || (e0type.isType(TypeName.INTEGER) && e1type.isType(TypeName.IMAGE))){
-			if(op.kind.equals(TIMES))
+
+		else if((e0type.isType(TypeName.IMAGE) && e1type.isType(TypeName.INTEGER))){
+			if(op.kind.equals(TIMES) || op.kind.equals(DIV) || op.kind.equals(MOD))
 				binaryExpression.setTypeName(TypeName.IMAGE);
 			else
 				throw new TypeCheckException("Operation is not allowed between two image and integer");
+		}
+		else if((e0type.isType(TypeName.INTEGER) && e1type.isType(TypeName.IMAGE))){
+			if(op.kind.equals(TIMES))
+				binaryExpression.setTypeName(TypeName.IMAGE);
+			else
+				throw new TypeCheckException("Operation is not allowed between two integer and image");
 		}
 		else if (e0type.isType(e1type)){
 			if(op.kind.equals(EQUAL) || op.kind.equals(NOTEQUAL)){
@@ -224,8 +235,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 		filterOpChain.getArg().visit(this, arg);
 
-		//visitTuple(filterOpChain.getArg(), arg);
-
 		return null;
 	}
 
@@ -266,6 +275,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		else {
 			// FIXME - validate this
 			dec.setTypeName(Type.getTypeName(dec.getFirstToken()));
+			identChain.setDec(dec);
 			identChain.setTypeName(Type.getTypeName(dec.getFirstToken()));
 		}
 		return null;
@@ -327,9 +337,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitDec(Dec declaration, Object arg) throws Exception {
 		boolean insert = symtab.insert(declaration.getIdent().getText(), declaration);
-		declaration.setTypeName(Type.getTypeName(declaration.getFirstToken()));
 		if(!insert)
 			throw new TypeCheckException("Ident is declared twice");
+		else
+			declaration.setTypeName(Type.getTypeName(declaration.getFirstToken()));
 		return null;
 	}
 
@@ -373,6 +384,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		boolean insert = symtab.insert(paramDec.getIdent().getText(), paramDec);
 		if(!insert)
 			throw new TypeCheckException("Symbol table insert failed");
+		else
+			paramDec.setTypeName(Type.getTypeName(paramDec.getFirstToken()));
 		return null;
 	}
 
